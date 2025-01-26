@@ -4,12 +4,12 @@ import(
 	"fmt"
 	"os"
 	"sort"
-	 "github.com/StupidWeasel/bootdev-pokedex/internal/pokeapi"
+	"github.com/StupidWeasel/bootdev-pokedex/internal/pokeapi"
 )
 type pokedexCommands struct {
 	command			string
 	description 	string
-	callback    	func(args ...string) error
+	callback    	func(client *pokeapi.PokeAPIClient, args ...string) error
 }
 
 var commands = make(map[string]pokedexCommands,0)
@@ -43,13 +43,13 @@ func populateCommands(){
 	sort.Strings(commandsSorted)
 }
 
-func cmdExit(args ...string) error{
+func cmdExit(_ *pokeapi.PokeAPIClient, args ...string) error{
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func cmdHelp(args ...string) error{
+func cmdHelp(_ *pokeapi.PokeAPIClient, args ...string) error{
 
 	if len(args)>0{
 		if command, ok := commands[args[0]]; ok {
@@ -67,8 +67,8 @@ func cmdHelp(args ...string) error{
 	return nil
 }
 
-func cmdMap(args ...string) error{
-	locations,err := pokeapi.GetNextLocationAreas()
+func cmdMap(client *pokeapi.PokeAPIClient, args ...string) error{
+	locations,err := client.GetNextLocationAreas()
 	if err != nil{
 		return err
 	}
@@ -78,8 +78,8 @@ func cmdMap(args ...string) error{
 	return nil
 }
 
-func cmdMapB(args ...string) error{
-	locations,err := pokeapi.GetPrevLocationAreas()
+func cmdMapB(client *pokeapi.PokeAPIClient, args ...string) error{
+	locations,err := client.GetPrevLocationAreas()
 	if err != nil{
 		return err
 	}

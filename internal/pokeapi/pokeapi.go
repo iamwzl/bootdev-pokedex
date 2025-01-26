@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"github.com/StupidWeasel/bootdev-pokedex/internal/pokecache"
+	"time"
 )
 
 type LocationArea struct {
@@ -25,13 +27,6 @@ type Pagination struct {
 
 type PaginationStates struct {
 	LocationState Pagination
-}
-
-var paginationStates = PaginationStates{
-	LocationState: Pagination{
-		NextURL:     nil,
-		PreviousURL: nil,
-	},
 }
 
 func (ps *PaginationStates) ResetLocationPagination(){
@@ -55,29 +50,54 @@ func (p *Pagination) GoBack() (string, error){
 	return *p.PreviousURL, nil
 }
 
-func getLocationAreas(URL string) ([]LocationArea, error){
+type PokeAPIClient struct {
+    cache *pokecache.Cache
+    baseUrl string
+    paginationStates PaginationStates
+}
+func NewPokeAPIClient(interval time.Duration) *PokeAPIClient {
+    return &PokeAPIClient{
+        cache: pokecache.NewCache(interval * time.Minute),
+        baseUrl: "https://pokeapi.co/api/v2/location-area",
+        paginationStates: PaginationStates{
+            LocationState: Pagination{
+                NextURL: nil,
+                PreviousURL: nil,
+            },
+        },
+    }
+}
+
+func (c *PokeAPIClient) getLocationAreas(URL string) ([]LocationArea, error){
 	if URL == ""{
-		URL = "https://pokeapi.co/api/v2/location-area"
+		URL = c.baseUrl
 	}
-	locationState := &paginationStates.LocationState
+	locationState := &c.paginationStates.LocationState
 
-	resp, err := http.Get(URL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to PokeAPI: %w", err)
-	}
-	defer resp.Body.Close()
+	body, found := c.cache.Get(URL);
+	if !found {
+		//fmt.Println("[Uncached]")
+		resp, err := http.Get(URL)
+        if err != nil {
+            return nil, fmt.Errorf("failed to connect to PokeAPI: %w", err)
+        }
+        defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("PokeAPI returned status code %d", resp.StatusCode)
-	}
+        if resp.StatusCode != 200 {
+            return nil, fmt.Errorf("PokeAPI returned status code %d", resp.StatusCode)
+        }
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to read response body: %w", err)
+        body, err = ioutil.ReadAll(resp.Body)
+        if err != nil {
+            return nil, fmt.Errorf("Failed to read response body: %w", err)
+        }
+        c.cache.Add(URL, body)
+	}else{
+		//fmt.Println("[Cached]")
 	}
 
 	var response PaginatedResponse
-	err = json.Unmarshal(body, &response)
+	err := json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to unmarshal JSON: %w", err)
 	}
@@ -88,26 +108,26 @@ func getLocationAreas(URL string) ([]LocationArea, error){
 	return response.Results, nil
 }
 
-func GetNextLocationAreas() ([]LocationArea, error){
-	locationState := &paginationStates.LocationState
+func (c *PokeAPIClient) GetNextLocationAreas() ([]LocationArea, error){
+	locationState := &c.paginationStates.LocationState
 	if locationState.NextURL == nil && locationState.PreviousURL == nil{
-		return getLocationAreas("")
+		return c.getLocationAreas("")
 	} 
 	URL,err := locationState.GoForward()
 	if err != nil {
 		return nil, err
 	}
-	return getLocationAreas(URL)
+	return c.getLocationAreas(URL)
 }
 
-func GetPrevLocationAreas() ([]LocationArea, error){
-	locationState := &paginationStates.LocationState
+func (c *PokeAPIClient) GetPrevLocationAreas() ([]LocationArea, error){
+	locationState := &c.paginationStates.LocationState
 	if locationState.NextURL == nil && locationState.PreviousURL == nil{
-		return getLocationAreas("")
+		return c.getLocationAreas("")
 	} 
 	URL,err := locationState.GoBack()
 	if err != nil {
 		return nil, err
 	}
-	return getLocationAreas(URL)
+	return c.getLocationAreas(URL)
 }

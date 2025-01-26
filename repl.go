@@ -5,6 +5,8 @@ import(
 	"fmt"
 	"os"
 	"strings"
+	"github.com/StupidWeasel/bootdev-pokedex/internal/pokeapi"
+	"time"
 )
 
 func cleanInput(text string) []string{
@@ -17,16 +19,17 @@ func cleanInput(text string) []string{
 
 func runREPL(){
 	scanner := bufio.NewScanner(os.Stdin)
+	client := pokeapi.NewPokeAPIClient(5 * time.Minute)
 	for{
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
 		if err := scanner.Err(); err != nil {
-			fmt.Println(os.Stderr, "reading standard input:", err)
+			fmt.Println("error reading standard input")
 		}
 		cleanedInput := cleanInput(scanner.Text())
 		if len(cleanedInput)>0{
 			if command, ok := commands[cleanedInput[0]]; ok {
-					err := command.callback(cleanedInput[1:]...)
+					err := command.callback(client, cleanedInput[1:]...)
 					if err != nil{
 						fmt.Println(err)
 					}
