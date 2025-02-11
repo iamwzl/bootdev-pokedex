@@ -1,12 +1,13 @@
 package main
 
-import(
+import (
 	"fmt"
+	"math"
+	"math/rand"
 	"os"
 	"sort"
 	"strings"
-	"math"
-	"math/rand"
+
 	"github.com/StupidWeasel/bootdev-pokedex/internal/pokeapi"
 )
 type pokedexCommands struct {
@@ -48,7 +49,7 @@ func populateCommands(){
 			command:		"catch",
 	    	description:	"{pokemon} -- Attempt to catch the named pokemon",
 	    	callback:    	cmdCatch}
-	
+
 	commands["inspect"] = pokedexCommands{
 			command:		"inspect",
 	    	description:	"{pokemon} -- Inspect a specific pokemon you have caught",
@@ -59,9 +60,9 @@ func populateCommands(){
 	    	description:	"List all the pokemon you have caught",
 	    	callback:    	cmdPokedex}
 
-	
-	for k,_ := range commands{
-		commandsSorted = append(commandsSorted, k)
+
+	for i := range commands {
+		commandsSorted = append(commandsSorted, i)
 	}
 	sort.Strings(commandsSorted)
 }
@@ -97,7 +98,7 @@ func cmdMap(client *pokeapi.PokeAPIClient, args ...string) error{
 	}
 	for _,location := range results.Results{
 		fmt.Println(location.Name)
-	} 
+	}
 	return nil
 }
 
@@ -108,12 +109,12 @@ func cmdMapB(client *pokeapi.PokeAPIClient, args ...string) error{
 	}
 	for _,location := range response.Results{
 		fmt.Println(location.Name)
-	} 
+	}
 	return nil
 }
 
 func cmdExplore(client *pokeapi.PokeAPIClient, args ...string) error{
-	
+
 	if len(args)==0{
 		return fmt.Errorf("No location specified")
 	}
@@ -125,12 +126,12 @@ func cmdExplore(client *pokeapi.PokeAPIClient, args ...string) error{
 	fmt.Printf("Exploring %s...\n", args[0])
 	for _, encounter := range response.PokemonEncounters{
 		fmt.Println(" - " + encounter.Pokemon.Name)
-	} 
+	}
 	return nil
 }
 
 func cmdCatch(client *pokeapi.PokeAPIClient, args ...string) error{
-	
+
 	if len(args)==0{
 		return fmt.Errorf("No pokemon specified")
 	}
