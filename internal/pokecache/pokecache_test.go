@@ -1,15 +1,14 @@
 package pokecache_test
 
-import(
-	"time"
-	"testing"
+import (
 	"fmt"
 	"github.com/StupidWeasel/bootdev-pokedex/internal/pokecache"
+	"testing"
+	"time"
 )
 
-
 func TestAddGet(t *testing.T) {
-	
+
 	const interval = 5 * time.Second
 	cache := pokecache.NewCache(interval)
 	cases := []struct {
@@ -44,7 +43,7 @@ func TestAddGet(t *testing.T) {
 
 func TestReapLoop(t *testing.T) {
 	const baseTime = 5 * time.Millisecond
-	const waitTime = baseTime + 10 * time.Millisecond
+	const waitTime = baseTime + 10*time.Millisecond
 	cache := pokecache.NewCache(baseTime)
 	cache.Add("https://example.com", []byte("testdata"))
 

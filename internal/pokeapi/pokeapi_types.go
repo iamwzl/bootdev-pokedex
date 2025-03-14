@@ -6,12 +6,12 @@ import (
 )
 
 type ShallowLocations struct {
-	Count    	int     `json:"count"`
+	Count       int     `json:"count"`
 	NextURL     *string `json:"next"`
 	PreviousURL *string `json:"previous"`
-	Results  	[]struct {
-		Name 	string `json:"name"`
-		URL  	string `json:"url"`
+	Results     []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
 	} `json:"results"`
 }
 
@@ -341,10 +341,10 @@ type Pokemon struct {
 }
 
 type PokeAPIClient struct {
-    cache *pokecache.Cache
-    baseUrl string
-    paginationStates PaginationStates
-    Pokedex map[string]Pokemon
+	cache            *pokecache.Cache
+	baseUrl          string
+	paginationStates PaginationStates
+	Pokedex          map[string]Pokemon
 }
 
 type Pagination struct {
@@ -356,21 +356,21 @@ type PaginationStates struct {
 	LocationState Pagination
 }
 
-func (ps *PaginationStates) ResetLocationPagination(){
+func (ps *PaginationStates) ResetLocationPagination() {
 	ps.LocationState = Pagination{
 		NextURL:     nil,
 		PreviousURL: nil,
 	}
 }
 
-func (p *Pagination) GoForward() (string, error){
+func (p *Pagination) GoForward() (string, error) {
 	if p.NextURL == nil {
 		return "", fmt.Errorf("You're on the last page!")
 	}
 	return *p.NextURL, nil
 }
 
-func (p *Pagination) GoBack() (string, error){
+func (p *Pagination) GoBack() (string, error) {
 	if p.PreviousURL == nil {
 		return "", fmt.Errorf("You're on the first page!")
 	}

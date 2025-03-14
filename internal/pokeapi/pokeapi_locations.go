@@ -7,29 +7,29 @@ import (
 	"net/http"
 )
 
-func (c *PokeAPIClient) getLocationAreas(URL string) (ShallowLocations, error){
-	if URL == ""{
+func (c *PokeAPIClient) getLocationAreas(URL string) (ShallowLocations, error) {
+	if URL == "" {
 		URL = c.baseUrl + "location-area/"
 	}
 	locationState := &c.paginationStates.LocationState
 
-	body, found := c.cache.Get(URL);
+	body, found := c.cache.Get(URL)
 	if !found {
 		resp, err := http.Get(URL)
-        if err != nil {
-            return ShallowLocations{}, fmt.Errorf("failed to connect to PokeAPI: %w", err)
-        }
-        defer resp.Body.Close()
+		if err != nil {
+			return ShallowLocations{}, fmt.Errorf("failed to connect to PokeAPI: %w", err)
+		}
+		defer resp.Body.Close()
 
-        if resp.StatusCode != 200 {
-            return ShallowLocations{}, fmt.Errorf("PokeAPI returned status code %d", resp.StatusCode)
-        }
+		if resp.StatusCode != 200 {
+			return ShallowLocations{}, fmt.Errorf("PokeAPI returned status code %d", resp.StatusCode)
+		}
 
-        body, err = ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return ShallowLocations{}, fmt.Errorf("Failed to read response body: %w", err)
-        }
-        c.cache.Add(URL, body)
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return ShallowLocations{}, fmt.Errorf("Failed to read response body: %w", err)
+		}
+		c.cache.Add(URL, body)
 	}
 
 	var response ShallowLocations
@@ -44,24 +44,24 @@ func (c *PokeAPIClient) getLocationAreas(URL string) (ShallowLocations, error){
 	return response, nil
 }
 
-func (c *PokeAPIClient) GetNextLocationAreas() (ShallowLocations, error){
+func (c *PokeAPIClient) GetNextLocationAreas() (ShallowLocations, error) {
 	locationState := &c.paginationStates.LocationState
-	if locationState.NextURL == nil && locationState.PreviousURL == nil{
+	if locationState.NextURL == nil && locationState.PreviousURL == nil {
 		return c.getLocationAreas("")
-	} 
-	URL,err := locationState.GoForward()
+	}
+	URL, err := locationState.GoForward()
 	if err != nil {
 		return ShallowLocations{}, err
 	}
 	return c.getLocationAreas(URL)
 }
 
-func (c *PokeAPIClient) GetPrevLocationAreas() (ShallowLocations, error){
+func (c *PokeAPIClient) GetPrevLocationAreas() (ShallowLocations, error) {
 	locationState := &c.paginationStates.LocationState
-	if locationState.NextURL == nil && locationState.PreviousURL == nil{
+	if locationState.NextURL == nil && locationState.PreviousURL == nil {
 		return c.getLocationAreas("")
-	} 
-	URL,err := locationState.GoBack()
+	}
+	URL, err := locationState.GoBack()
 	if err != nil {
 		return ShallowLocations{}, err
 	}
@@ -70,28 +70,28 @@ func (c *PokeAPIClient) GetPrevLocationAreas() (ShallowLocations, error){
 
 // Get pokemon in location
 
-func (c *PokeAPIClient) GetNamedLocation(name string) (NamedLocationArea, error){
+func (c *PokeAPIClient) GetNamedLocation(name string) (NamedLocationArea, error) {
 	URL := c.baseUrl + "location-area/" + name
 
-	body, found := c.cache.Get(URL);
+	body, found := c.cache.Get(URL)
 	if !found {
 		resp, err := http.Get(URL)
-        if err != nil {
-            return NamedLocationArea{}, fmt.Errorf("failed to connect to PokeAPI: %w", err)
-        }
-        defer resp.Body.Close()
-        if resp.StatusCode == 404{
-        	return NamedLocationArea{}, fmt.Errorf("That is not a valid region, use map to find one.")
-        }
-        if resp.StatusCode != 200 {
-            return NamedLocationArea{}, fmt.Errorf("PokeAPI returned status code %d", resp.StatusCode)
-        }
+		if err != nil {
+			return NamedLocationArea{}, fmt.Errorf("failed to connect to PokeAPI: %w", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == 404 {
+			return NamedLocationArea{}, fmt.Errorf("That is not a valid region, use map to find one.")
+		}
+		if resp.StatusCode != 200 {
+			return NamedLocationArea{}, fmt.Errorf("PokeAPI returned status code %d", resp.StatusCode)
+		}
 
-        body, err = ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return NamedLocationArea{}, fmt.Errorf("Failed to read response body: %w", err)
-        }
-        c.cache.Add(URL, body)
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return NamedLocationArea{}, fmt.Errorf("Failed to read response body: %w", err)
+		}
+		c.cache.Add(URL, body)
 	}
 
 	var response NamedLocationArea
